@@ -164,19 +164,16 @@ class World:
 
             elif isinstance(self.grid.get_value(animal.position), Fish):
                 if scan_cells[0]!=[]:
+                    (x_temporary,y_temporary) = animal.get_position()
+                    animal.set_position(random.choice(scan_cells[0]))
+                    self.grid.set_value((animal.get_position()), animal)
                     if animal.reproduction_possibility():
-                        (x_temporary,y_temporary) = animal.get_position()
-                        animal.set_position(random.choice(scan_cells[0]))
                         animal.reset_reproduction_index()
                         new_fish = Fish((x_temporary,y_temporary))
                         self.list_fishes.append(new_fish)
-                        self.grid.set_value((animal.get_position()), animal)
                         self.grid.set_value((x_temporary,y_temporary), new_fish)
                     else:
-                        (x_temporary,y_temporary) = animal.get_position()
-                        animal.set_position(random.choice(scan_cells[0]))
                         animal.reproduction_index_increment()
-                        self.grid.set_value((animal.get_position()), animal)
                         self.grid.set_value((x_temporary,y_temporary), 0)
 
     def move(self, animal):
