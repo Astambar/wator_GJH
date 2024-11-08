@@ -130,35 +130,28 @@ class World:
                 if scan_cells[1]!= []: # check if around the shark there is at least one fish
                     animal.eat()
                     (x_eaten_fish,y_fish_eaten) = random.choice(scan_cells[1]) # creates a tuple with the position chosen by a random choice where the shark will go
+                    (x_temporary,y_temporary) = animal.get_position() #creates a tuple with the current position of the shark
+                    self.list_fishes.remove(self.grid.get_value((x_eaten_fish,y_fish_eaten))) # removes the fish that is going to be eaten
+                    animal.set_position((x_eaten_fish,y_fish_eaten)) # moves the shark to its new position
+                    self.grid.set_value((x_eaten_fish,y_fish_eaten),animal)# updates the values in the grid                                         
                     if animal.reproduction_possibility(): # check if shark can reproduce
-                        (x_temporary,y_temporary) = animal.get_position() #creates a tuple with the current position of the shark
-                        self.list_fishes.remove(self.grid.get_value((x_eaten_fish,y_fish_eaten))) # removes the fish that is going to be eaten
-                        animal.set_position((x_eaten_fish,y_fish_eaten)) # moves the shark to its new position
                         new_shark = Shark((x_temporary,y_temporary)) # creates a new shark to the previous position of the shark
                         self.list_sharks.append(new_shark) # appends the new shark to the shark list
-                        self.grid.set_value((x_eaten_fish,y_fish_eaten),animal)# updates the values in the grid
                         self.grid.set_value((x_temporary,y_temporary), new_shark)
                         animal.reset_reproduction_index()
                     else:
-                        (x_temporary,y_temporary) = animal.get_position()
-                        self.list_fishes.remove(self.grid.get_value((x_eaten_fish,y_fish_eaten)))
-                        animal.set_position((x_eaten_fish,y_fish_eaten))
-                        self.grid.set_value((x_eaten_fish,y_fish_eaten), animal)
                         self.grid.set_value((x_temporary,y_temporary), 0)
                         animal.reproduction_index_increment()
                 elif scan_cells[0]!=[]: # else if there is no fish around but an empty position
+                    (x_temporary,y_temporary) = animal.get_position()
+                    animal.set_position(random.choice(scan_cells[0]))
+                    self.grid.set_value((animal.get_position()), animal)
                     if animal.reproduction_possibility():
-                        (x_temporary,y_temporary) = animal.get_position()
-                        animal.set_position(random.choice(scan_cells[0]))
                         new_shark = Shark((x_temporary,y_temporary))
                         self.list_sharks.append(new_shark)
-                        self.grid.set_value((animal.get_position()), animal)
                         self.grid.set_value((x_temporary,y_temporary), new_shark)
                         animal.reset_reproduction_index()
                     else:
-                        (x_temporary,y_temporary) = animal.get_position()
-                        animal.set_position(random.choice(scan_cells[0]))
-                        self.grid.set_value((animal.get_position()), animal)
                         self.grid.set_value((x_temporary,y_temporary), 0)
                         animal.reproduction_index_increment()
 
