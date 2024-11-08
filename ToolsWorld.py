@@ -1,6 +1,7 @@
 from world import World
 from fish import Fish
 from shark import Shark
+from pool import Grid
 import copy
 class ToolsWorld:
     def __init__(self):
@@ -51,10 +52,14 @@ class ToolsWorld:
     
     def number_less_than_or_equal_to_the_size_of_the_grid(self,world:World) -> bool:
         return self.sum_shark_and_fish(world) <= self.area(world)
+    def get_grid(self,world:World) -> Grid:
+        return world.grid
     def get_grid_pool(self, world:World) -> list:
         if world.grid is None:
             raise ValueError("Le monde n'a pas été correctement initialisé : l'attribut 'grid' est None.")
-        return world.grid.pool
+        return self.get_grid(world).pool
+    def get_grid_get_value(self,world:World,position:tuple) -> int|object|None:
+        return self.get_grid(world).get_value(position)
     def search_grid(self,world:World,focus:int|object)-> list[int|object]:
         list_focus = []
         if not isinstance(focus,object):
@@ -129,23 +134,83 @@ class ToolsWorld:
         return world_copy
     def is_mature_animal(self,animal:object) -> bool:
         return (self.get_chronon_animal(animal) > 0)
+    def is_not_mature_animal(self,animal:object)  -> bool:
+        return (not self.is_mature_animal(animal))
+    
     def convert_mature_animal(self, animal:object) -> object:
         if not self.is_mature_animal(animal):
             animal.chronon_increment() # Augmente le chronon si l'animal n'est pas mature
         return animal  # Retourne l'animal sans faire de copie
+    def verifier_deplacement_animal(self, world: World, animal: object, attendu_deplacement=True) -> dict:
+        """
+        Vérifie le déplacement de l'animal et l'intégrité de sa position dans la grille.
+
+        Args:
+            world (World): Le monde dans lequel l'animal se déplace.
+            animal (object): L'animal à déplacer.
+            attendu_deplacement (bool): Si True, on s'attend à ce que l'animal bouge.
+
+        Returns:
+            dict: Contient les informations suivantes :
+                - positions (tuple): Position de départ et d'arrivée.
+                - fidele_debut (bool): Si l'animal était bien à sa position de départ dans la grille.
+                - fidele_fin (bool): Si l'animal est bien à sa position de fin dans la grille.
+                - deplacement_reussi (bool): Si le déplacement correspond à ce qui était attendu.
+        """
+        # Enregistre la position initiale de l'animal
+        pos_debut = self.get_pos_animal(animal)
+        fidele_debut = (self.get_grid_get_value(world,pos_debut) == animal)
+
+        # Effectue le mouvement de l'animal
+        self.move_animal(world, animal)
+
+        # Enregistre la position finale de l'animal
+        pos_fin = self.get_pos_animal(animal)
+        fidele_fin = (self.get_grid_get_value(world,pos_fin) == animal)
+
+        # Vérifie si le déplacement a eu lieu
+        deplacement_effectue = (pos_debut != pos_fin)
+
+        # Détermine si le résultat du déplacement correspond à l'attente
+        deplacement_reussi = (deplacement_effectue == attendu_deplacement)
+
+        # Retourne les informations sous forme de dictionnaire
+        return {
+            "positions": (pos_debut, pos_fin),
+            "fidele_debut": fidele_debut,
+            "fidele_fin": fidele_fin,
+            "deplacement_reussi": deplacement_reussi
+        }
+
+    def check_animal_move(self, world: World,animal:object,attendue_deplacement=True) -> bool:
+        # Compare si la position a changé
+        move_animal_result = self.verifier_deplacement_animal(world,animal,attendue_deplacement)
+        if move_animal_result["fidele_debut"] == False:
+            ValueError("probléme de synchronisation entre la grille et l'animal avant le move")
+        if move_animal_result["fidele_fin"] == False:
+            ValueError("probléme de synchronisation entre la grille et l'animal après le move")
+        
+        return move_animal_result["deplacement_reussi"]
+    def check_animal_not_move(self, world: World,animal) -> bool:
+        return self.check_animal_move(world,animal,attendue_deplacement=False)
     def check_animal_mature_move(self, world: World,animal:object) -> bool:
         animal_copy = self.convert_mature_animal(animal)
-        pos_start = self.get_pos_animal(animal_copy)  # Récupère la position avant le déplacement
-        print(f"{pos_start=}")
-        self.move_animal(world,animal_copy) # Déplace l'animal original dans le monde
-        pos_end = self.get_pos_animal(animal_copy)  # Récupère la position après le déplacement
-        print(f"{pos_end=}")
-        return pos_start != pos_end  # Compare si la position a changé
+        return self.check_animal_move(world,animal_copy)
+    def check_animal_not_mature_not_move(self, world: World,animal) -> bool:
+        return self.check_animal_not_move(world,animal)
+
     def check_shark_mature_move(self, world: World) -> bool:
         return self.check_animal_mature_move(world,self.get_first_shark(world))
 
     def check_fish_mature_move(self, world: World) -> bool:
         return self.check_animal_mature_move(world,self.get_first_fish(world))
+    
+
+    def check_shark_not_mature_not_move(self, world: World) -> bool:
+        return self.check_animal_not_mature_not_move(world,self.get_first_shark(world))
+
+    def check_fish_not_mature_not_move(self, world: World) -> bool:
+        return self.check_animal_not_mature_not_move(world,self.get_first_fish(world))
 
 if __name__ == "__main__":
     tools = ToolsWorld()

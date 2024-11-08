@@ -78,6 +78,14 @@ class TestWorld:
         world = self.tools.create_world(0,1,row=2,columns=2)
         world = self.tools.place_animals(world)
         return self.tools.check_shark_mature_move(world)
+    def test_not_move_baby_fish(self):
+        world = self.tools.create_world(1,0,row=2,columns=2)
+        world = self.tools.place_animals(world)
+        return self.tools.check_fish_not_mature_not_move(world)
+    def test_not_move_baby_sharks(self):
+        world = self.tools.create_world(0,1,row=2,columns=2)
+        world = self.tools.place_animals(world)
+        return self.tools.check_shark_not_mature_not_move(world)
     
 
 
